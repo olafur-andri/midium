@@ -1,8 +1,12 @@
 import React, { useEffect } from 'react';
 import * as midiService from '../../services/midiService';
+import NoteService from '../../services/noteService';
+
+const noteService = new NoteService();
 
 const keyEventHandler = (noteName) => {
-  console.log('note name:', noteName);
+  noteService.playNote();
+  console.log(noteName);
 };
 
 const PracticeNotes = () => {

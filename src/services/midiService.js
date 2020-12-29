@@ -4,9 +4,11 @@ const NOTE_VALUE = 1;
 const NOTE_VELOCITY = 2;
 const NOTE_ON = 144;
 const NOTE_OFF = 128;
+const KEYBOARD_ON = true;
 let midiAccessed = false;
 let keyOnEventHandler = null;
 let keyOffEventHandler = null;
+let shiftDown = false;
 
 /**
  * Returns true if midi operations are enabled on this browser, false otherwise
@@ -29,6 +31,8 @@ const getNoteName = (noteValue) => {
 /**
  * The function that is run whenever the user presses a key on their MIDI
  * keyboard
+ *
+ * @param {Event} e An object that represents the fired event
  */
 const onMidiMessage = (e) => {
   const keyOn = e.data[EVENT_TYPE] === NOTE_ON;
@@ -43,14 +47,56 @@ const onMidiMessage = (e) => {
 };
 
 /**
+ * Returns 'true' if the given key name is a valid note name ('a'-'g')
+ *
+ * @param {String} keyName The name of the key that was pressed/released
+ * @return {Boolean} is the given key name a valid note name?
+ */
+const isValidKeyboardNote = (keyName) => {
+  const validKeys = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  return validKeys.includes(keyName.toLowerCase());
+};
+
+/**
+ * The function that is run whenever the user presses a key on their keyboard
+ *
+ * @param {KeyboardEvent} e An object that represents the fired event
+ */
+const onKeyboardMessage = (e) => {
+  const keyOn = e.type === 'keydown';
+  const keyOff = e.type === 'keyup';
+  if (e.key.toLowerCase() === 'shift') {
+    shiftDown = keyOn;
+  }
+
+  // don't continue if pressed key does not contain a valid note
+  if (!isValidKeyboardNote(e.key)) { return; }
+  const onHandlerExists = keyOnEventHandler != null;
+  const offHandlerExists = keyOffEventHandler != null;
+  const velocity = Math.floor(127 / 2); // mid-velocity
+
+  // get note's name
+  const noteName = `${e.key.toUpperCase()}${shiftDown ? '#' : ''}4`;
+
+  if (keyOn && onHandlerExists) keyOnEventHandler(noteName, velocity);
+  else if (keyOff && offHandlerExists) keyOffEventHandler(noteName, velocity);
+};
+
+/**
  * Requests access to MIDI devices
  */
 const requestMidiAccess = async () => {
   let midiAccess = null;
 
+  // add keyboard events too if that setting is turned on
+  if (KEYBOARD_ON) {
+    window.addEventListener('keydown', onKeyboardMessage);
+    window.addEventListener('keyup', onKeyboardMessage);
+  }
+
   // request MIDI access and handle errors
   try {
-    midiAccess = await navigator.requestMIDIAccess({ sysex: true });
+    midiAccess = await navigator.requestMIDIAccess({ sysex: false });
   } catch (err) {
     console.log('Error while requesting midi access:', err.message);
     return;
@@ -79,7 +125,7 @@ const requestMidiAccess = async () => {
  * @param {Function} handler The new key event handler
  */
 export const addKeyOnListener = async (handler) => {
-  if (!isMidiSupported()) { return; }
+  if (!isMidiSupported()) { console.error('MIDI not supported!'); return; }
   if (!midiAccessed) { await requestMidiAccess(); }
 
   // set the given function as the key event listener
