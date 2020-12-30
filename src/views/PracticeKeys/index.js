@@ -6,7 +6,7 @@ import Practice from '../../services/Practice';
 
 let practice;
 
-const PracticeNotes = () => {
+const PracticeKeys = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
   const currentTaskRef = useRef(currentTask);
@@ -45,7 +45,6 @@ const PracticeNotes = () => {
 
   useEffect(() => {
     practice = new Practice(Common.getAllNotes(), 100, 5);
-
     midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
@@ -81,4 +80,4 @@ const PracticeNotes = () => {
   );
 };
 
-export default PracticeNotes;
+export default PracticeKeys;

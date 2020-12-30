@@ -25,4 +25,17 @@ export default class Common {
     const delta = Math.floor(max - min);
     return min + Math.floor(delta * r);
   }
+
+  /**
+   * Returns a string array that includes the names of every semitone, in order,
+   * starting from C
+   *
+   * @returns {String[]} Array of all note names
+   */
+  static getAllNotes() {
+    return [
+      'C', 'C#', 'D', 'D#', 'E', 'F',
+      'F#', 'G', 'G#', 'A', 'A#', 'B',
+    ];
+  }
 }

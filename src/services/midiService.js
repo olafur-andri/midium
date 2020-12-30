@@ -1,3 +1,5 @@
+import Common from '../Common';
+
 /* Global values */
 const EVENT_TYPE = 0;
 const NOTE_VALUE = 1;
@@ -18,10 +20,7 @@ let shiftDown = false;
 const isMidiSupported = () => Boolean(navigator.requestMIDIAccess);
 
 const getNoteName = (noteValue) => {
-  const notes = [
-    'C', 'C#', 'D', 'D#', 'E', 'F',
-    'F#', 'G', 'G#', 'A', 'A#', 'B',
-  ];
+  const notes = Common.getAllNotes();
   const noteIndex = noteValue % notes.length;
   const noteName = notes[noteIndex];
   const noteNumber = Math.floor((noteValue - 24) / notes.length) + 1;

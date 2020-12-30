@@ -97,6 +97,11 @@ export default class Practice {
    * Stops the practice. Good for cleanup
    */
   stop() {
+    this.__tasks = null;
+    this.__onEndListener = null;
+    this.__lastTask = '';
+    this.__currentTask = '';
+    this.__interval = 0;
     clearInterval(this.__interval);
   }
 
@@ -125,6 +130,13 @@ export default class Practice {
   }
 
   /**
+   * Returns the user's current score
+   */
+  getScore() {
+    return this.__score;
+  }
+
+  /**
    * Gets a new random task, makes sure to not get the same task as last time
    *
    * @returns {String} A new and random task
@@ -136,9 +148,10 @@ export default class Practice {
 
     // make sure to not get the same task twice in a row
     if (enoughTasks && lastTaskExists) {
-      const invalidNewTask = newTask === this.__lastTask;
+      let invalidNewTask = newTask === this.__lastTask;
       while (invalidNewTask) {
         newTask = this.__tasks[Common.randomInt(0, this.__tasks.length)];
+        invalidNewTask = newTask === this.__lastTask;
       }
     }
 
@@ -154,7 +167,7 @@ export default class Practice {
     // handle the practice being stopped
     if (this.__duration <= 0) {
       if (this.__onEndListener !== null) { this.__onEndListener(); }
-      clearInterval(this.__interval);
+      this.stop();
     }
   }
 }
