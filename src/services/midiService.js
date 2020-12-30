@@ -76,7 +76,8 @@ const onKeyboardMessage = (e) => {
   const velocity = Math.floor(127 / 2); // mid-velocity
 
   // get note's name
-  const noteName = `${e.key.toUpperCase()}${shiftDown ? '#' : ''}4`;
+  const addSharp = shiftDown && !['B', 'E'].includes(e.key.toUpperCase());
+  const noteName = `${e.key.toUpperCase()}${addSharp ? '#' : ''}*`;
 
   if (keyOn && onHandlerExists) keyOnEventHandler(noteName, velocity);
   else if (keyOff && offHandlerExists) keyOffEventHandler(noteName, velocity);
