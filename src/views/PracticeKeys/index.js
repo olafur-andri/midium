@@ -4,12 +4,68 @@ import Common from '../../Common';
 import * as midiService from '../../services/midiService';
 import Practice from '../../services/Practice';
 
+/* Global values */
 let practice;
+
+/**
+ * Returns a list of strings containing all the possible tasks that the user
+ * might encounter in this practice
+ *
+ * @returns {String[]} All possible tasks for this practice
+ */
+const getAllTasks = () => {
+  const allTasks = [];
+  const allNotes = Common.getAllNotes();
+
+  allNotes.forEach((note) => {
+    allTasks.push(`${note} major`);
+    allTasks.push(`${note} minor`);
+  });
+
+  return allTasks;
+};
+
+/**
+ * Returns a solution (array of note names) for the given task
+ *
+ * @param {String} task The task to return solutions for
+ * @returns {String[]} The solution to the given task
+ */
+const getTaskSolution = (task) => {
+  const solution = [];
+  const allNotes = Common.getAllNotes();
+  const splitTask = task.split(' ');
+  const scaleName = splitTask[0].toUpperCase();
+  const scaleQuality = splitTask[1].toLowerCase();
+  const patterns = {
+    major: [2, 2, 1, 2, 2, 2, 1],
+    minor: [2, 1, 2, 2, 1, 2, 2],
+  };
+
+  // create the "upwards" solution
+  const pattern = patterns[scaleQuality];
+  let index = allNotes.indexOf(scaleName);
+  pattern.forEach((jump) => {
+    solution.push(allNotes[index]);
+    index += jump;
+    index %= allNotes.length; // circular increment
+  });
+  solution.push(scaleName); // add last note
+
+  // create the "downwards" solution
+  const mirror = [...solution].reverse();
+  solution.push(...mirror);
+
+  return solution;
+};
 
 const PracticeKeys = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
+  const [keyPosition, _setKeyPosition] = useState(0);
   const currentTaskRef = useRef(currentTask);
+  const keyPositionRef = useRef(keyPosition);
+  const taskSolutionRef = useRef([]);
 
   /**
    * The function that is run whenever the practice timer reaches 0
@@ -26,7 +82,14 @@ const PracticeKeys = () => {
    */
   const setCurrentTask = (newTask) => {
     currentTaskRef.current = newTask;
+    taskSolutionRef.current = getTaskSolution(newTask);
+    console.log(taskSolutionRef.current);
     _setCurrentTask(newTask);
+  };
+
+  const setKeyPosition = (newPosition) => {
+    keyPositionRef.current = newPosition;
+    _setKeyPosition(newPosition);
   };
 
   /**
@@ -36,15 +99,24 @@ const PracticeKeys = () => {
    */
   const keyEventHandler = (noteName) => {
     const cleanName = noteName.replace(/[0-9]/g, '').replace(/\*/g, '');
-    const isRightNote = cleanName === currentTaskRef.current;
-    if (!isRightNote) { return; } // wrong note
+    const isRightNote = cleanName === taskSolutionRef.current[keyPositionRef.current];
+    if (!isRightNote) { // wrong note
+      setKeyPosition(0);
+      return;
+    }
 
-    // right note was played, on to the next task
-    setCurrentTask(practice.getNextTask());
+    // increment key position
+    setKeyPosition(keyPositionRef.current + 1);
+
+    // check if key is done, if so then on to the next task
+    if (keyPositionRef.current >= taskSolutionRef.current.length) {
+      setKeyPosition(0);
+      setCurrentTask(practice.getNextTask());
+    }
   };
 
   useEffect(() => {
-    practice = new Practice(Common.getAllNotes(), 100, 5);
+    practice = new Practice(getAllTasks(), 100, 60 * 5);
     midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
@@ -58,12 +130,13 @@ const PracticeKeys = () => {
 
   return (
     <>
-      <h1>Practice - Notes</h1>
+      <h1>Practice - Keys</h1>
 
       <div style={{ opacity: done ? 0.5 : 1 }}>
         <center>
-          <p>Play this note:</p>
+          <p>Play this scale:</p>
           <h2>{currentTask}</h2>
+          <p>{keyPosition}</p>
         </center>
       </div>
 
