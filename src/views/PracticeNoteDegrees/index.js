@@ -6,7 +6,52 @@ import Practice from '../../services/Practice';
 
 let practice;
 
-const PracticeNotes = () => {
+/**
+ * Returns an array containing every possible task that the user has to solve
+ * in this practice
+ *
+ * @returns {String[]} An array containing all possible tasks
+ */
+const getAllPossibleTasks = () => {
+  const allTasks = [];
+  const allScales = Common.getAllScaleNames();
+  // doesn't make sense to have an 8th degree for this practice
+  const allDegrees = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
+
+  // add degrees on top of all scale names
+  allScales.forEach((scaleName) => {
+    allDegrees.forEach((degree) => {
+      allTasks.push(`${degree} degree of ${scaleName}`);
+    });
+  });
+
+  return allTasks;
+};
+
+/**
+ * Returns the correct note that the user needs to play in order to finish this
+ * task.
+ *
+ * @param {String} task The current task that the user needs to finish, e.g.
+ *                      '7th degree of F# minor'
+ * @returns {String} The name of the correct note
+ */
+const getTaskSolution = (task) => {
+  // extract degree
+  const degree = Number(task[0]);
+
+  // extract scale name
+  const words = task.split(' ');
+  const scaleBase = words[words.length - 2];
+  const scaleQuality = words[words.length - 1];
+  const scaleName = `${scaleBase} ${scaleQuality}`;
+
+  // figure out the correct note
+  const solution = Common.getScaleSolution(scaleName);
+  return solution[degree - 1];
+};
+
+const PracticeNoteDegrees = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
   const currentTaskRef = useRef(currentTask);
@@ -36,7 +81,7 @@ const PracticeNotes = () => {
    */
   const keyEventHandler = (noteName) => {
     const cleanName = noteName.replace(/[0-9]/g, '').replace(/\*/g, '');
-    const isRightNote = cleanName === currentTaskRef.current;
+    const isRightNote = cleanName === getTaskSolution(currentTaskRef.current);
     if (!isRightNote) { return; } // wrong note
 
     // right note was played, on to the next task
@@ -44,7 +89,7 @@ const PracticeNotes = () => {
   };
 
   useEffect(() => {
-    practice = new Practice(Common.getAllNotes(), 100, 60);
+    practice = new Practice(getAllPossibleTasks(), 100, 60);
 
     midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
@@ -59,7 +104,7 @@ const PracticeNotes = () => {
 
   return (
     <>
-      <h1>Practice - Notes</h1>
+      <h1>Practice - Note degrees</h1>
 
       <div style={{ opacity: done ? 0.5 : 1 }}>
         <center>
@@ -81,4 +126,4 @@ const PracticeNotes = () => {
   );
 };
 
-export default PracticeNotes;
+export default PracticeNoteDegrees;

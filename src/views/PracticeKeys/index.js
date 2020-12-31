@@ -8,49 +8,13 @@ import Practice from '../../services/Practice';
 let practice;
 
 /**
- * Returns a list of strings containing all the possible tasks that the user
- * might encounter in this practice
- *
- * @returns {String[]} All possible tasks for this practice
- */
-const getAllTasks = () => {
-  const allTasks = [];
-  const allNotes = Common.getAllNotes();
-
-  allNotes.forEach((note) => {
-    allTasks.push(`${note} major`);
-    allTasks.push(`${note} minor`);
-  });
-
-  return allTasks;
-};
-
-/**
  * Returns a solution (array of note names) for the given task
  *
  * @param {String} task The task to return solutions for
  * @returns {String[]} The solution to the given task
  */
 const getTaskSolution = (task) => {
-  const solution = [];
-  const allNotes = Common.getAllNotes();
-  const splitTask = task.split(' ');
-  const scaleName = splitTask[0].toUpperCase();
-  const scaleQuality = splitTask[1].toLowerCase();
-  const patterns = {
-    major: [2, 2, 1, 2, 2, 2, 1],
-    minor: [2, 1, 2, 2, 1, 2, 2],
-  };
-
-  // create the "upwards" solution
-  const pattern = patterns[scaleQuality];
-  let index = allNotes.indexOf(scaleName);
-  pattern.forEach((jump) => {
-    solution.push(allNotes[index]);
-    index += jump;
-    index %= allNotes.length; // circular increment
-  });
-  solution.push(scaleName); // add last note
+  const solution = Common.getScaleSolution(task);
 
   // create the "downwards" solution
   const mirror = [...solution].reverse();
@@ -116,7 +80,7 @@ const PracticeKeys = () => {
   };
 
   useEffect(() => {
-    practice = new Practice(getAllTasks(), 100, 60 * 5);
+    practice = new Practice(Common.getAllScaleNames(), 100, 60 * 5);
     midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());

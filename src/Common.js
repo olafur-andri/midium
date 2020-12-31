@@ -38,4 +38,53 @@ export default class Common {
       'F#', 'G', 'G#', 'A', 'A#', 'B',
     ];
   }
+
+  /**
+   * Returns a string array that contains the names of every scale used in the
+   * different practices
+   *
+   * @returns {String[]} Array of all scales
+   */
+  static getAllScaleNames() {
+    const allTasks = [];
+    const allNotes = this.getAllNotes();
+
+    allNotes.forEach((note) => {
+      allTasks.push(`${note} major`);
+      allTasks.push(`${note} minor`);
+    });
+
+    return allTasks;
+  }
+
+  /**
+   * Returns an array of note names (solution) that belongs to the given scale,
+   * only up.
+   *
+   * @param {String} scale The scale to return solutions for, e.g. 'A# major'
+   * @returns {String[]} The solution to the given task
+   */
+  static getScaleSolution(scale) {
+    const solution = [];
+    const allNotes = Common.getAllNotes();
+    const splitTask = scale.split(' ');
+    const scaleName = splitTask[0].toUpperCase();
+    const scaleQuality = splitTask[1].toLowerCase();
+    const patterns = {
+      major: [2, 2, 1, 2, 2, 2, 1],
+      minor: [2, 1, 2, 2, 1, 2, 2],
+    };
+
+    // create the "upwards" solution
+    const pattern = patterns[scaleQuality];
+    let index = allNotes.indexOf(scaleName);
+    pattern.forEach((jump) => {
+      solution.push(allNotes[index]);
+      index += jump;
+      index %= allNotes.length; // circular increment
+    });
+    solution.push(scaleName); // add last note
+
+    return solution;
+  }
 }
