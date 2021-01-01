@@ -6,7 +6,24 @@ import Practice from '../../services/Practice';
 
 let practice;
 
-const PracticeTriads = () => {
+/**
+ * Returns a list of all possible tasks that the user might have to finish in
+ * this practice.
+ *
+ * @returns {String[]} All possible tasks
+ */
+const getAllPossibleTasks = () => {
+  const allTasks = [];
+  const allTriads = theoryService.getAllTriadNames();
+  allTriads.forEach((triadName) => {
+    allTasks.push(`Root position of ${triadName}`);
+    allTasks.push(`1st inversion of ${triadName}`);
+    allTasks.push(`2nd inversion of ${triadName}`);
+  });
+  return allTasks;
+};
+
+const PracticeInversions = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
   const currentTaskRef = useRef(currentTask);
@@ -34,16 +51,30 @@ const PracticeTriads = () => {
    *
    * @param {String} triadName The name of the note that was played
    */
-  const keyEventHandler = (triadName) => {
-    const correctTriad = triadName === currentTaskRef.current;
-    if (!correctTriad) { return; }
+  const keyEventHandler = (triadName, inversion) => {
+    const task = currentTaskRef.current;
 
-    // right triad was played, on to the next task
+    // get the expected inversion
+    let expectedInversion = 0;
+    if (task.startsWith('1')) expectedInversion = 1;
+    else if (task.startsWith('2')) expectedInversion = 2;
+
+    // get the expected triad
+    const words = task.split(' ');
+    const triadBase = words[words.length - 2];
+    const triadQuality = words[words.length - 1];
+    const expectedTriad = `${triadBase} ${triadQuality}`;
+
+    const correctInversion = inversion === expectedInversion;
+    const correctTriad = triadName === expectedTriad;
+    if (!correctTriad || !correctInversion) { return; }
+
+    // right triad and inversion was played, on to the next task
     setCurrentTask(practice.getNextTask());
   };
 
   useEffect(() => {
-    practice = new Practice(theoryService.getAllTriadNames(), 100, 60 * 2);
+    practice = new Practice(getAllPossibleTasks(), 100, 60 * 2);
 
     midiService.setTriadOnListener(keyEventHandler);
     practice.setOnEndListener(practiceEndHandler);
@@ -58,7 +89,7 @@ const PracticeTriads = () => {
 
   return (
     <>
-      <h1>Practice - Triads</h1>
+      <h1>Practice - Inversions</h1>
 
       <div style={{ opacity: done ? 0.5 : 1 }}>
         <center>
@@ -80,4 +111,4 @@ const PracticeTriads = () => {
   );
 };
 
-export default PracticeTriads;
+export default PracticeInversions;
