@@ -1,4 +1,5 @@
 import Common from '../Common';
+import * as theoryService from './theoryService';
 
 /* Global values */
 const EVENT_TYPE = 0;
@@ -7,9 +8,11 @@ const NOTE_VELOCITY = 2;
 const NOTE_ON = 144;
 const NOTE_OFF = 128;
 const KEYBOARD_ON = true;
+const activeNotes = new Set();
 let midiAccessed = false;
 let keyOnEventHandler = null;
 let keyOffEventHandler = null;
+let triadOnEventListener = null;
 let shiftDown = false;
 
 /**
@@ -20,7 +23,7 @@ let shiftDown = false;
 const isMidiSupported = () => Boolean(navigator.requestMIDIAccess);
 
 const getNoteName = (noteValue) => {
-  const notes = Common.getAllNotes();
+  const notes = theoryService.getAllNotes();
   const noteIndex = noteValue % notes.length;
   const noteName = notes[noteIndex];
   const noteNumber = Math.floor((noteValue - 24) / notes.length) + 1;
@@ -43,6 +46,25 @@ const onMidiMessage = (e) => {
 
   if (keyOn && onHandlerExists) keyOnEventHandler(noteName, velocity);
   else if (keyOff && offHandlerExists) keyOffEventHandler(noteName, velocity);
+
+  /* Processing for 'triad on' event listener */
+  if (keyOn) activeNotes.add(e.data[NOTE_VALUE]);
+  else if (keyOff) activeNotes.delete(e.data[NOTE_VALUE]);
+
+  // only continue if there are precisely three active notes
+  if (activeNotes.size !== 3) { return; }
+
+  // get information about the triad
+  const inversion = theoryService.getTriadInversion(activeNotes);
+  const activeNoteNames = Array.from(activeNotes)
+    .map((noteValue) => getNoteName(noteValue));
+  const triadName = theoryService.getTriadName(activeNoteNames);
+
+  // don't continue if it's not a valid triad
+  if (inversion === -1 || triadName === '') { return; }
+
+  // call the event listener since it's a valid triad
+  if (triadOnEventListener) triadOnEventListener(triadName, inversion);
 };
 
 /**
@@ -124,7 +146,7 @@ const requestMidiAccess = async () => {
  *
  * @param {Function} handler The new key event handler
  */
-export const addKeyOnListener = async (handler) => {
+export const setKeyOnListener = async (handler) => {
   if (!isMidiSupported()) { console.error('MIDI not supported!'); return; }
   if (!midiAccessed) { await requestMidiAccess(); }
 
@@ -138,12 +160,26 @@ export const addKeyOnListener = async (handler) => {
  *
  * @param {Function} handler The new key event handler
  */
-export const addKeyOffListener = async (handler) => {
-  if (!isMidiSupported()) { return; }
+export const setKeyOffListener = async (handler) => {
+  if (!isMidiSupported()) { console.error('MIDI not supported!'); return; }
   if (!midiAccessed) { await requestMidiAccess(); }
 
   // set the given function as the key event listener
   keyOffEventHandler = handler;
+};
+
+/**
+ * Set the function as the 'triad on' event handler. The given function will
+ * therefore be run whenever the user plays a simple triad.
+ *
+ * @param {Function} handler The function that is run whenever a triad is played
+ */
+export const setTriadOnListener = async (handler) => {
+  if (!isMidiSupported()) { console.error('MIDI not supported!'); return; }
+  if (!midiAccessed) { await requestMidiAccess(); }
+
+  // set the given function as the chord event listener
+  triadOnEventListener = handler;
 };
 
 /**
@@ -158,4 +194,11 @@ export const removeKeyOnListener = () => {
  */
 export const removeKeyOffListener = () => {
   keyOffEventHandler = null;
+};
+
+/**
+ * Removes the current 'triad on' event listener, good for clean-up
+ */
+export const removeTriadOnListener = () => {
+  triadOnEventListener = null;
 };

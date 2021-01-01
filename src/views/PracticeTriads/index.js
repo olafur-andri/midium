@@ -6,7 +6,7 @@ import Practice from '../../services/Practice';
 
 let practice;
 
-const PracticeNotes = () => {
+const PracticeTriads = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
   const currentTaskRef = useRef(currentTask);
@@ -32,34 +32,33 @@ const PracticeNotes = () => {
   /**
    * The function that is run whenever the user presses a key on the midi keyboard
    *
-   * @param {String} noteName The name of the note that was played
+   * @param {String} triadName The name of the note that was played
    */
-  const keyEventHandler = (noteName) => {
-    const cleanName = noteName.replace(/[0-9]/g, '').replace(/\*/g, '');
-    const isRightNote = cleanName === currentTaskRef.current;
-    if (!isRightNote) { return; } // wrong note
+  const keyEventHandler = (triadName) => {
+    const correctTriad = triadName === currentTaskRef.current;
+    if (!correctTriad) { return; }
 
-    // right note was played, on to the next task
+    // right triad was played, on to the next task
     setCurrentTask(practice.getNextTask());
   };
 
   useEffect(() => {
-    practice = new Practice(theoryService.getAllNotes(), 100, 60);
+    practice = new Practice(theoryService.getAllTriadNames(), 100, 60);
 
-    midiService.setKeyOnListener((noteName) => keyEventHandler(noteName));
+    midiService.setTriadOnListener(keyEventHandler);
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
 
     // cleanup
     return () => {
-      midiService.removeKeyOnListener();
+      midiService.removeTriadOnListener();
       practice.stop();
     };
   }, []);
 
   return (
     <>
-      <h1>Practice - Notes</h1>
+      <h1>Practice - Triads</h1>
 
       <div style={{ opacity: done ? 0.5 : 1 }}>
         <center>
@@ -81,4 +80,4 @@ const PracticeNotes = () => {
   );
 };
 
-export default PracticeNotes;
+export default PracticeTriads;

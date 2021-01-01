@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import Common from '../../Common';
 import * as midiService from '../../services/midiService';
+import * as theoryService from '../../services/theoryService';
 import Practice from '../../services/Practice';
 
 /* Global values */
@@ -14,7 +14,7 @@ let practice;
  * @returns {String[]} The solution to the given task
  */
 const getTaskSolution = (task) => {
-  const solution = Common.getScaleSolution(task);
+  const solution = theoryService.getScaleSolution(task);
 
   // create the "downwards" solution
   const mirror = [...solution].reverse();
@@ -80,8 +80,8 @@ const PracticeKeys = () => {
   };
 
   useEffect(() => {
-    practice = new Practice(Common.getAllScaleNames(), 100, 60 * 5);
-    midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
+    practice = new Practice(theoryService.getAllScaleNames(), 100, 60 * 5);
+    midiService.setKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
 

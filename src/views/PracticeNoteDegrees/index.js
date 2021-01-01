@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import Common from '../../Common';
 import * as midiService from '../../services/midiService';
+import * as theoryService from '../../services/theoryService';
 import Practice from '../../services/Practice';
 
 let practice;
@@ -14,7 +14,7 @@ let practice;
  */
 const getAllPossibleTasks = () => {
   const allTasks = [];
-  const allScales = Common.getAllScaleNames();
+  const allScales = theoryService.getAllScaleNames();
   // doesn't make sense to have an 8th degree for this practice
   const allDegrees = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
 
@@ -47,7 +47,7 @@ const getTaskSolution = (task) => {
   const scaleName = `${scaleBase} ${scaleQuality}`;
 
   // figure out the correct note
-  const solution = Common.getScaleSolution(scaleName);
+  const solution = theoryService.getScaleSolution(scaleName);
   return solution[degree - 1];
 };
 
@@ -91,7 +91,7 @@ const PracticeNoteDegrees = () => {
   useEffect(() => {
     practice = new Practice(getAllPossibleTasks(), 100, 60);
 
-    midiService.addKeyOnListener((noteName) => keyEventHandler(noteName));
+    midiService.setKeyOnListener((noteName) => keyEventHandler(noteName));
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
 

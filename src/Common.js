@@ -27,64 +27,25 @@ export default class Common {
   }
 
   /**
-   * Returns a string array that includes the names of every semitone, in order,
-   * starting from C
+   * Checks if the two given arrays contain the exact same elements, *in the
+   * same order*
    *
-   * @returns {String[]} Array of all note names
+   * @param {Array} arr1 Array nr. 1
+   * @param {Array} arr2 Array nr. 2
+   * @returns {Boolean} Do the two arrays contain the same elements?
    */
-  static getAllNotes() {
-    return [
-      'C', 'C#', 'D', 'D#', 'E', 'F',
-      'F#', 'G', 'G#', 'A', 'A#', 'B',
-    ];
-  }
+  static sameArrays(arr1, arr2) {
+    const sameLength = arr1.length === arr2.length;
 
-  /**
-   * Returns a string array that contains the names of every scale used in the
-   * different practices
-   *
-   * @returns {String[]} Array of all scales
-   */
-  static getAllScaleNames() {
-    const allTasks = [];
-    const allNotes = this.getAllNotes();
+    // check each element
+    let sameElems = true;
+    for (let i = 0; i < arr1.length; i += 1) {
+      if (arr1[i] !== arr2[i]) {
+        sameElems = false;
+        break;
+      }
+    }
 
-    allNotes.forEach((note) => {
-      allTasks.push(`${note} major`);
-      allTasks.push(`${note} minor`);
-    });
-
-    return allTasks;
-  }
-
-  /**
-   * Returns an array of note names (solution) that belongs to the given scale,
-   * only up.
-   *
-   * @param {String} scale The scale to return solutions for, e.g. 'A# major'
-   * @returns {String[]} The solution to the given task
-   */
-  static getScaleSolution(scale) {
-    const solution = [];
-    const allNotes = Common.getAllNotes();
-    const splitTask = scale.split(' ');
-    const scaleName = splitTask[0].toUpperCase();
-    const scaleQuality = splitTask[1].toLowerCase();
-    const patterns = {
-      major: [2, 2, 1, 2, 2, 2, 1],
-      minor: [2, 1, 2, 2, 1, 2, 2],
-    };
-
-    // create the "upwards" solution
-    const pattern = patterns[scaleQuality];
-    let index = allNotes.indexOf(scaleName);
-    pattern.forEach((jump) => {
-      solution.push(allNotes[index]);
-      index += jump;
-      index %= allNotes.length; // circular increment
-    });
-    solution.push(scaleName); // add last note
-
-    return solution;
+    return sameLength && sameElems;
   }
 }
