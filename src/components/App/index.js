@@ -6,6 +6,7 @@ import PracticeKeys from '../../views/PracticeKeys';
 import PracticeNoteDeg from '../../views/PracticeNoteDegrees';
 import PracticeTriads from '../../views/PracticeTriads';
 import PracticeInversions from '../../views/PracticeInversions';
+import PracticeTriScales from '../../views/PracticeTriadScales';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route exact path="/practices/note-degrees" component={PracticeNoteDeg} />
       <Route exact path="/practices/triads" component={PracticeTriads} />
       <Route exact path="/practices/inversions" component={PracticeInversions} />
+      <Route exact path="/practices/triad-scales" component={PracticeTriScales} />
     </Switch>
   );
 }

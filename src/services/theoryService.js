@@ -30,11 +30,14 @@ export const getTriadInversion = (notes) => {
   // TODO: Add inversions for diminished chords
   // check if root position
   const is0 = Common.sameArrays(deltas, [3, 4])
-           || Common.sameArrays(deltas, [4, 3]);
+           || Common.sameArrays(deltas, [4, 3])
+           || Common.sameArrays(deltas, [3, 3]);
   const is1 = Common.sameArrays(deltas, [4, 5])
-           || Common.sameArrays(deltas, [3, 5]);
+           || Common.sameArrays(deltas, [3, 5])
+           || Common.sameArrays(deltas, [3, 6]);
   const is2 = Common.sameArrays(deltas, [5, 3])
-           || Common.sameArrays(deltas, [5, 4]);
+           || Common.sameArrays(deltas, [5, 4])
+           || Common.sameArrays(deltas, [6, 3]);
   if (is0) { return 0; }
   if (is1) { return 1; }
   if (is2) { return 2; }
@@ -67,7 +70,6 @@ export const getScaleSolution = (scale) => {
     index += jump;
     index %= allNotes.length; // circular increment
   });
-  solution.push(scaleName); // add last note
 
   return solution;
 };
@@ -92,14 +94,16 @@ export const getAllScaleNames = () => {
 
 /**
  * Returns an array of all triad names
+ *
+ * @returns {String[]} The array of all triad names
  */
 export const getAllTriadNames = () => {
-  // TODO: Add diminished chords
   const allTriadNames = [];
   const allNotes = getAllNotes();
   allNotes.forEach((note) => {
     allTriadNames.push(`${note} major`);
     allTriadNames.push(`${note} minor`);
+    allTriadNames.push(`${note} dim`);
   });
   return allTriadNames;
 };
@@ -153,4 +157,27 @@ export const getTriadName = (noteNames) => {
 export const getTriadSolution = (triadName) => {
   if (triadName in triads) return triads[triadName];
   return [];
+};
+
+/**
+ * Takes in the name of a scale and returns a list of all the triads that belong
+ * to that scale
+ *
+ * @param {String} scaleName The name of the scale to fetch all triads from
+ * @returns {String[]} The names of all triads that belong to scale 'scaleName'
+ */
+export const getAllTriadsInScale = (scaleName) => {
+  const allTriads = [];
+  const allNotes = getScaleSolution(scaleName);
+
+  for (let i = 0; i < allNotes.length; i += 1) {
+    const triadNotes = [];
+    triadNotes.push(allNotes[i]); // first note
+    triadNotes.push(allNotes[(i + 2) % allNotes.length]); // second note
+    triadNotes.push(allNotes[(i + 4) % allNotes.length]); // third note
+    const triadName = getTriadName(triadNotes);
+    allTriads.push(triadName);
+  }
+
+  return allTriads;
 };

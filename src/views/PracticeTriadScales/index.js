@@ -4,29 +4,31 @@ import * as midiService from '../../services/midiService';
 import * as theoryService from '../../services/theoryService';
 import Practice from '../../services/Practice';
 
-/* Global values */
 let practice;
 
 /**
- * Returns a solution (array of note names) for the given task
+ * Takes in a task (scale name) and returns the triads that the user will have
+ * to play in order to finish it, in the correct order.
  *
- * @param {String} task The task to return solutions for
- * @returns {String[]} The solution to the given task
+ * @param {String} task The next task that the user will need to finish
+ * @returns {String[]} The triads to finish the given task
  */
 const getTaskSolution = (task) => {
-  const solution = theoryService.getScaleSolution(task);
+  const solution = theoryService.getAllTriadsInScale(task);
 
-  // add last note
+  // add last triad
   solution.push(solution[0]);
 
-  // create the "downwards" solution
+  // add "downwards" solution
   const mirror = [...solution].reverse();
   solution.push(...mirror);
+
+  console.log('solution:', solution);
 
   return solution;
 };
 
-const PracticeKeys = () => {
+const PracticeTriadScales = () => {
   const [done, setDone] = useState(false);
   const [currentTask, _setCurrentTask] = useState('');
   const [keyPosition, _setKeyPosition] = useState(0);
@@ -38,7 +40,7 @@ const PracticeKeys = () => {
    * The function that is run whenever the practice timer reaches 0
    */
   const practiceEndHandler = () => {
-    midiService.removeKeyOnListener();
+    midiService.removeTriadOnListener();
     setDone(true);
   };
 
@@ -50,7 +52,6 @@ const PracticeKeys = () => {
   const setCurrentTask = (newTask) => {
     currentTaskRef.current = newTask;
     taskSolutionRef.current = getTaskSolution(newTask);
-    console.log(taskSolutionRef.current);
     _setCurrentTask(newTask);
   };
 
@@ -68,20 +69,23 @@ const PracticeKeys = () => {
   /**
    * The function that is run whenever the user presses a key on the midi keyboard
    *
-   * @param {String} noteName The name of the note that was played
+   * @param {String} triadName The name of the note that was played
    */
-  const keyEventHandler = (noteName) => {
-    const cleanName = noteName.replace(/[0-9]/g, '').replace(/\*/g, '');
-    const isRightNote = cleanName === taskSolutionRef.current[keyPositionRef.current];
-    if (!isRightNote) { // wrong note
+  const keyEventHandler = (triadName) => {
+    // get the expected triad
+    const expectedTriad = taskSolutionRef.current[keyPositionRef.current];
+
+    // check if the played triad is the correct one
+    const correctTriad = triadName === expectedTriad;
+    if (!correctTriad) {
       setKeyPosition(0);
       return;
     }
 
-    // increment key position
+    // increment key position since the right triad was playeed
     setKeyPosition(keyPositionRef.current + 1);
 
-    // check if key is done, if so then on to the next task
+    // check if triad scale is done, if so, then on to the next task
     if (keyPositionRef.current >= taskSolutionRef.current.length) {
       setKeyPosition(0);
       setCurrentTask(practice.getNextTask());
@@ -89,25 +93,26 @@ const PracticeKeys = () => {
   };
 
   useEffect(() => {
-    practice = new Practice(theoryService.getAllScaleNames(), 100, 60 * 5);
-    midiService.setKeyOnListener((noteName) => keyEventHandler(noteName));
+    practice = new Practice(theoryService.getAllScaleNames(), 100, 60 * 2);
+
+    midiService.setTriadOnListener(keyEventHandler);
     practice.setOnEndListener(practiceEndHandler);
     setCurrentTask(practice.start());
 
     // cleanup
     return () => {
-      midiService.removeKeyOnListener();
+      midiService.removeTriadOnListener();
       practice.stop();
     };
   }, []);
 
   return (
     <>
-      <h1>Practice - Keys</h1>
+      <h1>Practice - Triad Scales</h1>
 
       <div style={{ opacity: done ? 0.5 : 1 }}>
         <center>
-          <p>Play this scale:</p>
+          <p>Play this triad scale:</p>
           <h2>{currentTask}</h2>
           <p>{keyPosition}</p>
         </center>
@@ -126,4 +131,4 @@ const PracticeKeys = () => {
   );
 };
 
-export default PracticeKeys;
+export default PracticeTriadScales;
