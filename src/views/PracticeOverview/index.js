@@ -17,7 +17,7 @@ const PracticeOverview = () => {
         <NavLink exact to="/practices/triads">Triads</NavLink>
         <NavLink exact to="/practices/inversions">Inversions</NavLink>
         <NavLink exact to="/practices/triad-scales">Triad Scales</NavLink>
-        <NavLink exact to="/practices/key-degree-triads">Key Degree Triads</NavLink>
+        <NavLink exact to="/practices/triad-degrees">Triad Degrees</NavLink>
       </div>
     </>
   );
