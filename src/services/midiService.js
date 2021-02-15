@@ -1,4 +1,3 @@
-import Common from '../Common';
 import * as theoryService from './theoryService';
 
 /* Global values */
